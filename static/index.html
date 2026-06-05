@@ -24,10 +24,10 @@ database. Point an uptime monitor at it and get a known-good failure pattern to 
 <p>Every failure endpoint accepts these query parameters:</p>
 <table>
   <tr><th>param</th><th>meaning</th></tr>
-  <tr><td><code>period</code></td><td>length of one repeating cycle, e.g. <code>24h</code>, <code>1h</code>, <code>10m</code> (required)</td></tr>
-  <tr><td><code>duration</code></td><td>length of a single outage, e.g. <code>5m</code> (required)</td></tr>
-  <tr><td><code>count</code></td><td>number of outages per period — supply this <em>or</em> <code>uptime</code></td></tr>
-  <tr><td><code>uptime</code></td><td>target availability as a percent, e.g. <code>99.9</code>; converted to an outage count (at least one, at most one short of full). <code>100</code> is rejected with 400</td></tr>
+  <tr><td><code>period</code></td><td>length of one repeating cycle, e.g. <code>24h</code>, <code>1h</code>, <code>10m</code> (default <code>24h</code>)</td></tr>
+  <tr><td><code>duration</code></td><td>length of a single outage, e.g. <code>5m</code> (default <code>15m</code>)</td></tr>
+  <tr><td><code>count</code></td><td>number of outages per period — supply this <em>or</em> <code>uptime</code> (not both)</td></tr>
+  <tr><td><code>uptime</code></td><td>target availability as a percent, e.g. <code>99.9</code>; converted to an outage count (at least one, at most one short of full). Defaults to <code>90</code> when neither <code>count</code> nor <code>uptime</code> is given. <code>100</code> is rejected with 400</td></tr>
   <tr><td><code>seed</code></td><td>RNG seed (default <code>0</code>); change it to reshuffle the outage placement</td></tr>
 </table>
 

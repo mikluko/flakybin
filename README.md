@@ -31,10 +31,10 @@ The first path segment selects how outages are placed within each period.
 
 | param | meaning |
 | --- | --- |
-| `period` | length of one repeating cycle, e.g. `24h`, `1h`, `10m` (required) |
-| `duration` | length of a single outage, e.g. `5m` (required) |
-| `count` | number of outages per period — supply this **or** `uptime` |
-| `uptime` | target availability percent, e.g. `99.9`; converted to a count. Rounds to zero outages → 400 |
+| `period` | length of one repeating cycle, e.g. `24h`, `1h`, `10m` (default `24h`) |
+| `duration` | length of a single outage, e.g. `5m` (default `15m`) |
+| `count` | number of outages per period — supply this **or** `uptime` (not both) |
+| `uptime` | target availability percent, e.g. `99.9`; converted to a count. Defaults to `90` when neither `count` nor `uptime` is given. `100` → 400 |
 | `seed` | RNG seed (default `0`); change to reshuffle placement |
 
 ## Endpoints

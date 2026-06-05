@@ -169,8 +169,12 @@ func handleDrop(w http.ResponseWriter, r *http.Request) {
 // schedule (HTML for browsers, JSON for scripts). The reference docs live at
 // /docs.
 func handleHome(w http.ResponseWriter, r *http.Request) {
-	const defaultUptime = "90"
-	v := url.Values{"period": {"24h"}, "duration": {"15m"}, "seed": {"42"}, "uptime": {defaultUptime}}
+	v := url.Values{
+		"period":   {prettyDur(defaultPeriod)},
+		"duration": {prettyDur(defaultDuration)},
+		"seed":     {"42"},
+		"uptime":   {defaultUptime},
+	}
 	sched, _ := parseSchedule(Jitter, v) // fixed inputs cannot fail
 	req := request{sched: sched, now: time.Now()}
 	req.active, req.inOut = sched.ActiveWindow(req.now)

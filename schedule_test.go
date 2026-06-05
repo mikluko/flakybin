@@ -102,18 +102,49 @@ func TestValidationErrors(t *testing.T) {
 		q    string
 	}{
 		{Noise, "period=1h&duration=7m&count=1"},           // not divisible
-		{Noise, "period=1h&duration=5m"},                   // no count or uptime
-		{Noise, "period=1h&duration=5m&count=1&uptime=99"}, // both
+		{Noise, "period=1h&duration=5m&count=1&uptime=99"}, // both (mutually exclusive)
 		{Noise, "period=1h&duration=5m&count=99"},          // count > slots
 		{Noise, "period=1h&duration=5m&uptime=100"},        // no outage room
 		{Jitter, "period=5m&duration=10m&count=1"},         // duration > period
-		{Noise, "duration=5m&count=1"},                     // missing period
-		{Jitter, "period=1h&count=1"},                      // missing duration
 	}
 	for _, c := range cases {
 		v, _ := url.ParseQuery(c.q)
 		if _, herr := parseSchedule(c.mode, v); herr == nil {
 			t.Errorf("expected error for %s %q", c.mode, c.q)
+		}
+	}
+}
+
+// TestDefaults verifies omitted parameters fall back to the explorer defaults
+// (period 24h, duration 15m, uptime 90), so a bare endpoint URL still resolves.
+func TestDefaults(t *testing.T) {
+	cases := []struct {
+		mode Mode
+		q    string
+	}{
+		{Jitter, ""},                     // everything defaulted
+		{Jitter, "period=1h"},            // duration + uptime defaulted
+		{Noise, "duration=5m"},           // period + uptime defaulted
+		{Noise, "period=1h&duration=5m"}, // neither count nor uptime
+		{Jitter, "seed=7"},               // only seed
+	}
+	for _, c := range cases {
+		v, _ := url.ParseQuery(c.q)
+		s, herr := parseSchedule(c.mode, v)
+		if herr != nil {
+			t.Fatalf("%s %q: unexpected error %s", c.mode, c.q, herr.msg)
+		}
+		if !v.Has("period") && s.Period != defaultPeriod {
+			t.Errorf("%q: period = %s, want default %s", c.q, s.Period, defaultPeriod)
+		}
+		if !v.Has("duration") && s.Duration != defaultDuration {
+			t.Errorf("%q: duration = %s, want default %s", c.q, s.Duration, defaultDuration)
+		}
+		if s.Count < 1 {
+			t.Errorf("%q: count %d < 1", c.q, s.Count)
+		}
+		if up := s.UptimePct(); up <= 0 || up >= 100 {
+			t.Errorf("%q: realized uptime %.4g out of (0,100)", c.q, up)
 		}
 	}
 }

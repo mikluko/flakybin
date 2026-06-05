@@ -33,13 +33,21 @@ func parseMode(s string) (Mode, *httpError) {
 	}
 }
 
+// Defaults applied when a parameter is omitted, mirroring the values the
+// explorer opens with so a bare endpoint URL still resolves a schedule.
+const (
+	defaultPeriod   = 24 * time.Hour
+	defaultDuration = 15 * time.Minute
+	defaultUptime   = "90"
+)
+
 // parseSchedule builds a Schedule from the common query parameters:
 //
 //	seed      uint64        outage RNG seed (default 0)
-//	period    duration      length of one repeating cycle (required)
-//	duration  duration      length of a single outage (required)
-//	count     int           number of outages per period   } exactly
-//	uptime    float percent target availability            } one of
+//	period    duration      length of one repeating cycle (default 24h)
+//	duration  duration      length of a single outage (default 15m)
+//	count     int           number of outages per period   } at most one;
+//	uptime    float percent target availability            } default uptime=90
 func parseSchedule(mode Mode, q url.Values) (Schedule, *httpError) {
 	s := Schedule{Mode: mode}
 
@@ -51,13 +59,13 @@ func parseSchedule(mode Mode, q url.Values) (Schedule, *httpError) {
 		s.Seed = seed
 	}
 
-	period, herr := requireDuration(q, "period")
+	period, herr := optionalDuration(q, "period", defaultPeriod)
 	if herr != nil {
 		return s, herr
 	}
 	s.Period = period
 
-	dur, herr := requireDuration(q, "duration")
+	dur, herr := optionalDuration(q, "duration", defaultDuration)
 	if herr != nil {
 		return s, herr
 	}
@@ -87,16 +95,13 @@ func parseSchedule(mode Mode, q url.Values) (Schedule, *httpError) {
 	return s, nil
 }
 
-// resolveCount derives the per-period outage count from either count or uptime
-// (exactly one must be supplied).
+// resolveCount derives the per-period outage count from count or uptime. The
+// two are mutually exclusive; when neither is given it defaults to uptime=90.
 func resolveCount(mode Mode, q url.Values, period, dur time.Duration, slots int) (int, *httpError) {
 	countStr, hasCount := q["count"]
 	uptimeStr, hasUptime := q["uptime"]
-	switch {
-	case hasCount && hasUptime:
+	if hasCount && hasUptime {
 		return 0, badRequest("count and uptime are mutually exclusive; supply only one")
-	case !hasCount && !hasUptime:
-		return 0, badRequest("supply count or uptime")
 	}
 
 	var count int
@@ -107,9 +112,13 @@ func resolveCount(mode Mode, q url.Values, period, dur time.Duration, slots int)
 		}
 		count = c
 	} else {
-		up, err := strconv.ParseFloat(uptimeStr[0], 64)
+		uptimeVal := defaultUptime
+		if hasUptime {
+			uptimeVal = uptimeStr[0]
+		}
+		up, err := strconv.ParseFloat(uptimeVal, 64)
 		if err != nil || up < 0 || up > 100 {
-			return 0, badRequest("invalid uptime %q: must be a percentage in [0,100]", uptimeStr[0])
+			return 0, badRequest("invalid uptime %q: must be a percentage in [0,100]", uptimeVal)
 		}
 		// Total downtime per period implied by the availability target. A
 		// target of 100% (rounding to no downtime) is rejected. Any sub-100%
@@ -142,10 +151,10 @@ func resolveCount(mode Mode, q url.Values, period, dur time.Duration, slots int)
 	return count, nil
 }
 
-func requireDuration(q url.Values, name string) (time.Duration, *httpError) {
+func optionalDuration(q url.Values, name string, def time.Duration) (time.Duration, *httpError) {
 	v := q.Get(name)
 	if v == "" {
-		return 0, badRequest("missing required parameter %q", name)
+		return def, nil
 	}
 	d, err := time.ParseDuration(v)
 	if err != nil {
