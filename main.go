@@ -35,6 +35,7 @@ func main() {
 func routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", handleHome)
+	mux.HandleFunc("GET /healthz", handleHealthz)
 	mux.HandleFunc("GET /robots.txt", handleRobots)
 	mux.HandleFunc("GET /style.css", handleStyle)
 	mux.HandleFunc("GET /docs", handleDocs)
@@ -79,4 +80,13 @@ func handleStyle(w http.ResponseWriter, r *http.Request) {
 func handleRobots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write(robotsTxt)
+}
+
+// healthzPath is the liveness/readiness probe endpoint. It always returns 204
+// and is excluded from the access log (see accessLog).
+const healthzPath = "/healthz"
+
+// handleHealthz is the always-200-ish health probe: 204 No Content.
+func handleHealthz(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
 }

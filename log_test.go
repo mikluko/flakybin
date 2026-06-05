@@ -1,9 +1,45 @@
 package main
 
 import (
+	"bytes"
+	"log"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+func TestHealthz(t *testing.T) {
+	srv := httptest.NewServer(routes())
+	defer srv.Close()
+	resp, err := srv.Client().Get(srv.URL + "/healthz")
+	if err != nil {
+		t.Fatalf("GET /healthz: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("GET /healthz -> %d, want 204", resp.StatusCode)
+	}
+}
+
+func TestAccessLogSkipsHealthz(t *testing.T) {
+	var buf bytes.Buffer
+	prev := log.Writer()
+	log.SetOutput(&buf)
+	defer log.SetOutput(prev)
+
+	h := accessLog(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/healthz", nil))
+	if buf.Len() != 0 {
+		t.Errorf("/healthz should not be logged, got: %q", buf.String())
+	}
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/jitter/inspect", nil))
+	if buf.Len() == 0 {
+		t.Error("non-healthz request should be logged")
+	}
+}
 
 func TestClientIP(t *testing.T) {
 	cases := []struct {

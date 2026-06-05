@@ -19,6 +19,11 @@ import (
 // since no status line is written in that case.
 func accessLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Health probes are frequent and uninteresting; don't log them.
+		if r.URL.Path == healthzPath {
+			next.ServeHTTP(w, r)
+			return
+		}
 		start := time.Now()
 		lw := &logWriter{ResponseWriter: w}
 		next.ServeHTTP(lw, r)
