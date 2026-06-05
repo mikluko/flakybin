@@ -13,6 +13,7 @@ var version = "dev"
 var (
 	indexHTML = mustReadAsset("static/index.html")
 	styleCSS  = mustReadAsset("static/style.css")
+	robotsTxt = mustReadAsset("static/robots.txt")
 )
 
 func main() {
@@ -34,6 +35,7 @@ func main() {
 func routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", handleHome)
+	mux.HandleFunc("GET /robots.txt", handleRobots)
 	mux.HandleFunc("GET /style.css", handleStyle)
 	mux.HandleFunc("GET /docs", handleDocs)
 	mux.HandleFunc("GET /doc", handleDocs)
@@ -70,4 +72,11 @@ func handleDocs(w http.ResponseWriter, r *http.Request) {
 func handleStyle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/css; charset=utf-8")
 	w.Write(styleCSS)
+}
+
+// handleRobots serves robots.txt, which keeps crawlers off the failure
+// endpoints — only the home page and docs are allowed.
+func handleRobots(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write(robotsTxt)
 }
