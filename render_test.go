@@ -70,8 +70,10 @@ func TestBuildNavLinksValidate(t *testing.T) {
 				}
 			}
 		}
-		for _, chip := range nav.Fail {
-			check(c.q+" fail", chip.Href)
+		for _, row := range nav.Fail {
+			for _, chip := range row.Chips {
+				check(c.q+" fail:"+row.Label, chip.Href)
+			}
 		}
 	}
 }

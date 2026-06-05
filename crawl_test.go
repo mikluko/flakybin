@@ -84,8 +84,10 @@ func TestCrawlNoBrokenLinks(t *testing.T) {
 				}
 			}
 		}
-		for _, chip := range nav.Fail {
-			assertLinkValid(t, chip.Href) // validate, do not fetch (would hang/drop)
+		for _, row := range nav.Fail {
+			for _, chip := range row.Chips {
+				assertLinkValid(t, chip.Href) // validate, do not fetch (would hang/drop)
+			}
 		}
 	}
 

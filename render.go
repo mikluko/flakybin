@@ -69,7 +69,7 @@ type switchView struct {
 
 type navView struct {
 	Rows []navRow
-	Fail []navChip
+	Fail []navRow
 }
 
 type navRow struct {
@@ -272,7 +272,8 @@ func buildNav(s Schedule, uptime string) navView {
 	})
 	nav.Rows = append(nav.Rows, seedRow)
 
-	// emulate: exact current schedule (count-based) against live endpoints.
+	// emulate: exact current schedule (count-based) against the live endpoints,
+	// grouped by failure class. Each chip copies its URL on click.
 	base := "period=" + prettyDur(s.Period) +
 		"&duration=" + prettyDur(s.Duration) +
 		"&seed=" + strconv.FormatUint(s.Seed, 10) +
@@ -284,17 +285,40 @@ func buildNav(s Schedule, uptime string) navView {
 		}
 		return u
 	}
-	for _, f := range []struct{ label, path, extra string }{
-		{"status 503", "status/503", "retry-after=auto"},
-		{"status 429", "status/429", "retry-after=auto"},
-		{"status 500", "status/500", ""},
-		{"hang", "hang", ""},
-		{"drop", "drop", "after=128"},
-	} {
-		nav.Fail = append(nav.Fail, navChip{Label: f.label, Href: emu(f.path, f.extra), Blank: true, Copy: true})
+	statusRow := func(label string, codes []statusCode) navRow {
+		row := navRow{Label: label}
+		for _, c := range codes {
+			row.Chips = append(row.Chips, navChip{
+				Label: c.code, Href: emu("status/"+c.code, c.extra), Blank: true, Copy: true,
+			})
+		}
+		return row
+	}
+	nav.Fail = []navRow{
+		statusRow("4xx", status4xx),
+		statusRow("5xx", status5xx),
+		{Label: "other", Chips: []navChip{
+			{Label: "hang", Href: emu("hang", ""), Blank: true, Copy: true},
+			{Label: "drop", Href: emu("drop", "after=128"), Blank: true, Copy: true},
+		}},
 	}
 	return nav
 }
+
+// statusCode is one emulate chip: an HTTP status with optional extra query
+// (e.g. retry-after for codes that carry it).
+type statusCode struct{ code, extra string }
+
+var (
+	status4xx = []statusCode{
+		{"400", ""}, {"401", ""}, {"403", ""}, {"404", ""},
+		{"408", ""}, {"418", ""}, {"429", "retry-after=auto"},
+	}
+	status5xx = []statusCode{
+		{"500", ""}, {"502", ""}, {"503", "retry-after=auto"},
+		{"504", "retry-after=auto"}, {"507", ""},
+	}
+)
 
 // buildTimeline computes the stacked-track timeline view: one track per period,
 // outage windows merged and positioned proportionally, with a now marker.

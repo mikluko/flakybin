@@ -42,7 +42,7 @@ footer { margin-top: 2rem; opacity: .6; font-size: .9em; }
 nav.nav { margin: 1rem 0 1.5rem; }
 .row { margin: .3rem 0; }
 .row b { display: inline-block; min-width: 5.5em; opacity: .6; font-weight: 600; }
-.row.fail { margin-top: 1.3rem; }
+.fails { margin-top: 1.3rem; }
 a.chip { display: inline-block; padding: .12em .6em; margin: .15em .15em; border: 1px solid #8885; border-radius: 6px; text-decoration: none; }
 a.chip:hover { background: #8882; }
 a.chip.cur { font-weight: 700; border-color: #06b6d4; }

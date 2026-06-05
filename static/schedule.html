@@ -19,8 +19,12 @@
 {{- range .Nav.Rows}}
   <div class="row"><b>{{.Label}}</b>{{range .Chips}}{{template "chip" .}}{{end}}</div>
 {{- end}}
-  <div class="row fail"><b>emulate</b>{{range .Nav.Fail}}{{template "chip" .}}{{end}}</div>
-  <p class="hint">Failure links hit the live endpoints; they fail only inside an outage window. Click to copy a URL; ⇧/⌘-click to open it.</p>
+  <div class="fails">
+  {{- range .Nav.Fail}}
+    <div class="row"><b>{{.Label}}</b>{{range .Chips}}{{template "chip" .}}{{end}}</div>
+  {{- end}}
+  </div>
+  <p class="hint">Emulate links hit the live endpoints; they fail only inside an outage window. Click to copy a URL; ⇧/⌘-click to open it.</p>
 </nav>
 
 <div class="scroll">
