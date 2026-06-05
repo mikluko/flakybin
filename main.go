@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 // version is set at build time via -ldflags "-X main.version=...".
@@ -26,9 +31,41 @@ func main() {
 		handler = accessLog(handler)
 	}
 
-	log.Printf("flakybin %s listening on %s", version, *addr)
-	srv := &http.Server{Addr: *addr, Handler: handler}
-	log.Fatal(srv.ListenAndServe())
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: handler,
+		// Slowloris protection and idle-connection cleanup. WriteTimeout is
+		// deliberately NOT set: the /hang endpoint holds the response open
+		// until the outage window (or ?for=), and a write deadline would sever
+		// it. Do not add WriteTimeout.
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
+	// Shut down gracefully on SIGINT/SIGTERM so rolling updates drain cleanly.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	errc := make(chan error, 1)
+	go func() {
+		log.Printf("flakybin %s listening on %s", version, *addr)
+		errc <- srv.ListenAndServe()
+	}()
+
+	select {
+	case err := <-errc:
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal(err)
+		}
+	case <-ctx.Done():
+		stop() // restore default signal handling for a second, force-quit signal
+		log.Print("shutting down")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Printf("graceful shutdown failed: %v", err)
+		}
+	}
 }
 
 // routes builds the request handler. Shared by main and tests.
