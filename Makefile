@@ -11,6 +11,8 @@ VERSION := $(GIT_VERSION:v%=%)
 KO_DOCKER_REPO := ghcr.io/mikluko/flakybin
 # helm push appends the chart name, landing it at $(CHART_REPO)/flakybin.
 CHART_REPO := ghcr.io/mikluko/flakybin/charts
+# Image platforms for the multi-arch manifest (override on the command line).
+PLATFORMS := linux/amd64,linux/arm64
 export KO_DOCKER_REPO
 
 help: ## Show this help message
@@ -24,7 +26,7 @@ build: image package ## Build and push container image and Helm chart
 
 image: ## Build and push container image with ko
 	@echo "Building and pushing image: $(KO_DOCKER_REPO):$(VERSION)"
-	VERSION=$(VERSION) ko build --bare --tags $(VERSION)
+	VERSION=$(VERSION) ko build --bare --platform=$(PLATFORMS) --tags $(VERSION)
 
 package: ## Package and push Helm chart to the OCI registry
 	@echo "Packaging and pushing chart: $(CHART_REPO)/flakybin:$(VERSION)"
