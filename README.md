@@ -1,8 +1,16 @@
 # flakybin
 
-An HTTP server that fails on a deterministic, seed-reproducible schedule. It emulates a
-service that goes down on a repeating cycle, so you can point an uptime monitor or retry
-logic at a known-good failure pattern.
+[![Go Report Card](https://goreportcard.com/badge/github.com/mikluko/flakybin)](https://goreportcard.com/report/github.com/mikluko/flakybin)
+[![GitHub License](https://img.shields.io/github/license/mikluko/flakybin)](https://github.com/mikluko/flakybin/blob/main/LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/tag/mikluko/flakybin?label=release)](https://github.com/mikluko/flakybin/tags)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/mikluko/flakybin)](https://github.com/mikluko/flakybin/blob/main/go.mod)
+[![GitHub Stars](https://img.shields.io/github/stars/mikluko/flakybin)](https://github.com/mikluko/flakybin/stargazers)
+
+Deterministic HTTP chaos for testing uptime monitors and retry logic.
+
+flakybin is a fault-injection server that fails on a deterministic, seed-reproducible
+schedule: it returns errors, hangs, and drops connections during scheduled outage windows,
+emulating a service that goes down on a repeating cycle.
 
 Outage placement is computed purely from the request URL. The same parameters always yield
 the same outage windows on the wall clock, across restarts and across machines. No state,
@@ -13,6 +21,8 @@ no database.
 ```sh
 go run .            # listens on :8080 (override with -addr or PORT)
 PORT=9000 go run .
+
+go install github.com/mikluko/flakybin@latest   # or install the binary
 ```
 
 Then open <http://localhost:8080/> for the interactive schedule explorer, or
