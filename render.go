@@ -590,6 +590,56 @@ func randomSeed() uint64 {
 	return binary.BigEndian.Uint64(b[:])%999_900 + 100
 }
 
+// randIndex returns a random index in [0, n) using crypto/rand (a small modulo
+// bias is acceptable for picking a random schedule).
+func randIndex(n int) int {
+	if n <= 0 {
+		return 0
+	}
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return 0
+	}
+	return int(binary.BigEndian.Uint64(b[:]) % uint64(n))
+}
+
+// dcombo is one feasible (mode, period, duration, uptime) shape for /diceroll.
+type dcombo struct {
+	mode     string
+	period   time.Duration
+	duration time.Duration
+	uptime   string
+}
+
+// dicerollCombos is every aligned (feasible) shape across the explore ladders —
+// the population /diceroll samples from. Built once at startup.
+var dicerollCombos = buildDicerollCombos()
+
+func buildDicerollCombos() []dcombo {
+	modes := []struct {
+		name string
+		m    Mode
+	}{{"even", Even}, {"jitter", Jitter}, {"noise", Noise}}
+	var out []dcombo
+	for _, md := range modes {
+		for _, p := range roundPeriods {
+			for _, u := range uptimeLadder {
+				up, err := strconv.ParseFloat(u, 64)
+				if err != nil {
+					continue
+				}
+				df := (100 - up) / 100
+				for _, d := range roundDurations {
+					if aligns(md.m, p, d, df) {
+						out = append(out, dcombo{md.name, p, d, u})
+					}
+				}
+			}
+		}
+	}
+	return out
+}
+
 // durLabel is the human display form of a duration, extending prettyDur with
 // days and weeks ("1d", "1w"). It is for UI text only — URLs use prettyDur,
 // since time.ParseDuration does not accept "d"/"w".

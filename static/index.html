@@ -49,6 +49,7 @@ monitor at it and get a known-good failure pattern to test against.
   <tr><td><code>GET /{mode}/hang</code></td><td>withholds the response until the outage ends, or for <code>for=&lt;duration&gt;</code> if given. Emulates a timeout.</td></tr>
   <tr><td><code>GET /{mode}/drop</code></td><td>writes <code>after=&lt;bytes&gt;</code> of body (default 0) then resets the TCP connection. Emulates a mid-flight drop.</td></tr>
   <tr><td><code>GET /{mode}/inspect</code></td><td>shows the schedule and its outage windows. A browser (<code>Accept: text/html</code>) gets a graphical timeline; scripts get JSON. Force either with <code>?format=html</code> / <code>?format=json</code>. Triggers no failure.</td></tr>
+  <tr><td><code>GET /diceroll</code> 🎲</td><td>redirects (302) to <code>inspect</code> for a random but valid schedule — random mode, period, duration, uptime, and seed.</td></tr>
 </table>
 
 <h2>Examples</h2>

@@ -72,6 +72,7 @@ func main() {
 func routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", handleHome)
+	mux.HandleFunc("GET /diceroll", handleDiceroll)
 	mux.HandleFunc("GET /healthz", handleHealthz)
 	mux.HandleFunc("GET /robots.txt", handleRobots)
 	mux.HandleFunc("GET /style.css", handleStyle)

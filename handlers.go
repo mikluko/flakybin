@@ -184,6 +184,17 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	serveSchedule(w, r, req, defaultUptime)
 }
 
+// handleDiceroll serves /diceroll: redirect to the inspect explorer for a
+// random but valid schedule (random mode, period, duration, uptime, and seed).
+func handleDiceroll(w http.ResponseWriter, r *http.Request) {
+	c := dicerollCombos[randIndex(len(dicerollCombos))]
+	u := "/" + c.mode + "/inspect?period=" + prettyDur(c.period) +
+		"&duration=" + prettyDur(c.duration) +
+		"&seed=" + strconv.FormatUint(randomSeed(), 10) +
+		"&uptime=" + c.uptime
+	http.Redirect(w, r, u, http.StatusFound)
+}
+
 // handleInspect serves /{mode}/inspect: the schedule explorer (HTML) or a JSON
 // view of the schedule and its upcoming windows. It triggers no failure, so it
 // carries no status/hang/drop path segment — the schedule is identical across
