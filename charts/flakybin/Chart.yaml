@@ -1,0 +1,11 @@
+apiVersion: v2
+name: flakybin
+description: Emulates an intermittently failing HTTP server on a deterministic, seed-reproducible schedule
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/mikluko/flakybin
+sources:
+  - https://github.com/mikluko/flakybin
+maintainers:
+  - name: mikluko

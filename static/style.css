@@ -1,0 +1,70 @@
+:root { color-scheme: light dark; }
+body {
+  font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+a { color: inherit; }
+h1 { font-size: 1.4rem; margin: 0 0 .3rem; }
+h1 a { text-decoration: none; }
+h1 .subnav { font-size: 1rem; font-weight: 400; opacity: .6; }
+h2 { font-size: 1.05rem; margin: 2rem 0 .4rem; border-bottom: 1px solid #8884; padding-bottom: .2rem; }
+.lead { opacity: .8; margin-top: 0; }
+
+code, pre { background: #8881; border-radius: 4px; }
+code { padding: .1em .35em; }
+pre { padding: .7rem 1rem; overflow-x: auto; }
+
+table { border-collapse: collapse; width: 100%; margin: .5rem 0; }
+th, td { text-align: left; padding: .35rem .6rem; border-bottom: 1px solid #8883; vertical-align: top; }
+th { opacity: .7; font-weight: 600; }
+
+.pill { display: inline-block; padding: .05em .5em; border: 1px solid #8886; border-radius: 999px; font-size: .8em; }
+
+footer { margin-top: 2rem; opacity: .6; font-size: .9em; }
+.github-corner svg { fill: #ec4899; color: #fff; position: absolute; top: 0; right: 0; border: 0; width: 72px; height: 72px; }
+.github-corner:hover .octo-arm { animation: octocat-wave 560ms ease-in-out; }
+@keyframes octocat-wave { 0%, 100% { transform: rotate(0); } 20%, 60% { transform: rotate(-25deg); } 40%, 80% { transform: rotate(10deg); } }
+@media (max-width: 500px) {
+  .github-corner:hover .octo-arm { animation: none; }
+  .github-corner .octo-arm { animation: octocat-wave 560ms ease-in-out; }
+}
+
+/* --- schedule explorer --- */
+.sub { margin: 0 0 1rem; }
+.badge { display: inline-block; padding: .1em .6em; border-radius: 6px; font-weight: 600; margin-right: .6em; }
+.badge.up { background: #80808033; }
+.badge.down { background: #ec4899; color: #fff; }
+.util { opacity: .55; }
+.next { opacity: .55; margin-left: .6em; }
+
+nav.nav { margin: 1rem 0 1.5rem; }
+.row { margin: .3rem 0; }
+.row b { display: inline-block; min-width: 5.5em; opacity: .6; font-weight: 600; }
+.row.fail { margin-top: 1.3rem; }
+a.chip { display: inline-block; padding: .12em .6em; margin: .15em .15em; border: 1px solid #8885; border-radius: 6px; text-decoration: none; }
+a.chip:hover { background: #8882; }
+a.chip.cur { font-weight: 700; border-color: #06b6d4; }
+a.chip.copied { border-color: #2e7d32; }
+.hint { opacity: .55; margin: .5rem 0 0; }
+
+.scroll { margin: .6rem 0 .2rem; display: flex; gap: 1.2rem; opacity: .8; }
+.scroll a { text-decoration: none; }
+.scroll .frozen { opacity: .4; cursor: default; }
+svg { margin-top: .3rem; }
+.lbl { fill: currentColor; opacity: .65; font-size: 12px; }
+.up { fill: #808080; opacity: .28; }
+.down { fill: #ec4899; opacity: .85; }
+.hit { fill: transparent; cursor: pointer; }
+#tip {
+  position: fixed; display: none; pointer-events: none; z-index: 10;
+  background: #1c1c1c; color: #eee; border: 1px solid #555; border-radius: 5px;
+  padding: .25em .55em; font-size: 12px; white-space: nowrap;
+}
+.now { stroke: #06b6d4; stroke-width: 2; }
+.nowlbl { fill: #06b6d4; font-size: 11px; text-anchor: middle; }
+.legend { margin-top: .8rem; display: flex; gap: 1.2rem; opacity: .8; }
+.legend span::before { content: ""; display: inline-block; width: .8em; height: .8em; border-radius: 2px; margin-right: .4em; vertical-align: baseline; }
+.swUp::before { background: #808080; opacity: .6; }
+.swDown::before { background: #ec4899; }

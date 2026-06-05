@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flakybin — intermittently failing HTTP server</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<a href="https://github.com/mikluko/flakybin" class="github-corner" aria-label="View source on GitHub"><svg viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin:130px 106px" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<h1><a href="/">flakybin</a><span class="subnav"> · <a href="/docs">docs</a></span></h1>
+<p class="lead">An HTTP server that fails on a deterministic, seed-reproducible schedule.</p>
+
+<p>
+flakybin emulates a service that goes down on a repeating cycle. Outage placement is
+computed purely from the request URL, so the same parameters always yield the same
+outage windows on the wall clock, across restarts and across machines. No state, no
+database. Point an uptime monitor at it and get a known-good failure pattern to test against.
+</p>
+<p>Try the interactive <a href="/">schedule explorer</a> to visualize and tune a schedule, then copy a failure URL.</p>
+
+<h2>Common parameters</h2>
+<p>Every failure endpoint accepts these query parameters:</p>
+<table>
+  <tr><th>param</th><th>meaning</th></tr>
+  <tr><td><code>period</code></td><td>length of one repeating cycle, e.g. <code>24h</code>, <code>1h</code>, <code>10m</code> (required)</td></tr>
+  <tr><td><code>duration</code></td><td>length of a single outage, e.g. <code>5m</code> (required)</td></tr>
+  <tr><td><code>count</code></td><td>number of outages per period — supply this <em>or</em> <code>uptime</code></td></tr>
+  <tr><td><code>uptime</code></td><td>target availability as a percent, e.g. <code>99.9</code>; converted to an outage count (at least one, at most one short of full). <code>100</code> is rejected with 400</td></tr>
+  <tr><td><code>seed</code></td><td>RNG seed (default <code>0</code>); change it to reshuffle the outage placement</td></tr>
+</table>
+
+<h2>Modes</h2>
+<p>The first path segment selects how outages are placed within each period:</p>
+<table>
+  <tr><th>mode</th><th>behavior</th></tr>
+  <tr><td><span class="pill">jitter</span> <em>(default)</em></td><td><code>count</code> outages of length <code>duration</code> are dropped at seed-hashed offsets anywhere within the period. No divisibility constraint; looks like organic flapping.</td></tr>
+  <tr><td><span class="pill">noise</span></td><td>The period is divided into <code>N = period/duration</code> fixed slots; <code>count</code> of them are outages. <code>period</code> must divide evenly by <code>duration</code> (otherwise 400). Grid-aligned and easy to reason about.</td></tr>
+</table>
+
+<h2>Endpoints</h2>
+<table>
+  <tr><th>route</th><th>during an outage</th></tr>
+  <tr><td><code>GET /{mode}/status/{code}</code></td><td>responds with HTTP <code>{code}</code> (e.g. 503, 429, 500); 200 when up. Optional <code>retry-after=auto</code> or <code>retry-after=&lt;seconds&gt;</code> sets the <code>Retry-After</code> header.</td></tr>
+  <tr><td><code>GET /{mode}/hang</code></td><td>withholds the response until the outage ends, or for <code>for=&lt;duration&gt;</code> if given. Emulates a timeout.</td></tr>
+  <tr><td><code>GET /{mode}/drop</code></td><td>writes <code>after=&lt;bytes&gt;</code> of body (default 0) then resets the TCP connection. Emulates a mid-flight drop.</td></tr>
+  <tr><td><code>GET /{mode}/inspect</code></td><td>shows the schedule and its outage windows. A browser (<code>Accept: text/html</code>) gets a graphical timeline; scripts get JSON. Force either with <code>?format=html</code> / <code>?format=json</code>. Triggers no failure.</td></tr>
+</table>
+
+<h2>Examples</h2>
+<pre>
+# Jitter (default): a 24h period with outages totalling ≈ 99% availability,
+# returning 503 with an automatic Retry-After during each outage.
+/jitter/status/503?period=24h&amp;duration=5m&amp;uptime=99&amp;retry-after=auto
+
+# Ten 1-minute blips scattered through each hour, seed 42.
+/jitter/hang?period=1h&amp;duration=1m&amp;count=10&amp;seed=42
+
+# Connection drops after 128 bytes, once per 30-minute period.
+/jitter/drop?period=30m&amp;duration=2m&amp;count=1&amp;after=128
+
+# Noise: a 24h period cut into 5-minute slots, 12 of them down (≈ 99.58% uptime).
+/noise/status/503?period=24h&amp;duration=5m&amp;count=12&amp;retry-after=auto
+
+# Noise, first-N-minutes-of-the-hour style: 1h period, 10m outage, 1 slot.
+/noise/status/500?period=1h&amp;duration=10m&amp;count=1
+
+# Inspect the schedule without triggering it.
+/jitter/inspect?period=24h&amp;duration=5m&amp;uptime=99
+</pre>
+
+<h2>Response headers</h2>
+<p>Every response advertises the resolved schedule and current state via
+<code>X-Flaky-*</code> headers: <code>Mode</code>, <code>Period</code>, <code>Duration</code>,
+<code>Count</code>, <code>Seed</code>, <code>Uptime</code>, <code>In-Outage</code>, and either
+<code>Outage-Ends</code> or <code>Next-Outage</code> (RFC 3339).</p>
+
+<h2>Author</h2>
+<p>By <a href="https://github.com/mikluko">mikluko</a>. Source at
+<a href="https://github.com/mikluko/flakybin">github.com/mikluko/flakybin</a>.</p>
+
+<h2>See also</h2>
+<p><a href="https://httpbin.org">httpbin.org</a> — the original HTTP request &amp; response
+testing service that inspired the look and feel.</p>
+
+</body>
+</html>

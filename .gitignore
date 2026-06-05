@@ -1,0 +1,10 @@
+/flakybin
+*.out
+coverage.html
+/.build/
+/dist/
+/tmp/
+!.gitignore
+!.github/
+!.ko.yaml
+!.helmignore

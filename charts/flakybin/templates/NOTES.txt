@@ -1,0 +1,14 @@
+flakybin is deployed as {{ include "flakybin.fullname" . }}.
+
+Reach the schedule explorer:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else if eq .Values.service.type "LoadBalancer" }}
+  Watch for the external IP:
+    kubectl --namespace {{ .Release.Namespace }} get svc {{ include "flakybin.fullname" . }} -w
+{{- else }}
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "flakybin.fullname" . }} 8080:{{ .Values.service.port }}
+  open http://127.0.0.1:8080/
+{{- end }}
