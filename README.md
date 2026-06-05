@@ -32,8 +32,11 @@ Then open <http://localhost:8080/> for the interactive schedule explorer, or
 
 The first path segment selects how outages are placed within each period.
 
-- **jitter** (default) — `count` outages of length `duration` are dropped at seed-hashed
-  offsets anywhere within the period. No divisibility constraint; looks like organic flapping.
+- **even** (default) — `count` outages of length `duration` spaced uniformly across the
+  period (one per `period/count` interval); the `seed` shifts the whole pattern's phase.
+  No divisibility constraint; regular and predictable.
+- **jitter** — `count` outages of length `duration` are dropped at seed-hashed offsets
+  anywhere within the period. No divisibility constraint; looks like organic flapping.
 - **noise** — the period is divided into `N = period/duration` fixed slots; `count` of
   them are outages. `period` must divide evenly by `duration`. Grid-aligned.
 
@@ -59,8 +62,8 @@ The first path segment selects how outages are placed within each period.
 ## Examples
 
 ```sh
-# Jitter (default): ~99% availability over a 24h period, 503 + automatic Retry-After.
-curl -i 'localhost:8080/jitter/status/503?period=24h&duration=5m&uptime=99&retry-after=auto'
+# Even (default): ~99% availability over a 24h period, evenly spaced, 503 + Retry-After.
+curl -i 'localhost:8080/even/status/503?period=24h&duration=5m&uptime=99&retry-after=auto'
 
 # Ten 1-minute blips scattered through each hour, seed 42.
 curl -i 'localhost:8080/jitter/hang?period=1h&duration=1m&count=10&seed=42'

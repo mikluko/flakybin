@@ -22,13 +22,21 @@ const (
 	// Jitter drops Count outages of length duration at seed-hashed offsets
 	// anywhere within each period. No divisibility constraint.
 	Jitter
+	// Even spaces Count outages of length duration uniformly across the period
+	// (one per period/Count interval); the seed shifts the whole pattern's
+	// phase. No divisibility constraint.
+	Even
 )
 
 func (m Mode) String() string {
-	if m == Jitter {
+	switch m {
+	case Jitter:
 		return "jitter"
+	case Even:
+		return "even"
+	default:
+		return "noise"
 	}
-	return "noise"
 }
 
 // Window is a half-open outage interval [Start, End).
@@ -52,7 +60,7 @@ type Schedule struct {
 	Count    int // resolved number of outages per period
 }
 
-// Slots returns N = period/duration for noise mode (0 for jitter).
+// Slots returns N = period/duration for noise mode (0 for jitter and even).
 func (s Schedule) Slots() int {
 	if s.Mode == Noise {
 		return int(s.Period / s.Duration)
@@ -91,6 +99,18 @@ func (s Schedule) windowsForPeriod(n int64) []Window {
 				off = int64(jitterHash(s.Seed, n, k) % uint64(span+1))
 			}
 			start := periodStart + off
+			out = append(out, Window{time.Unix(0, start), time.Unix(0, start+dur)})
+		}
+	case Even:
+		// One outage per equal interval (spacing = period/Count), all shifted
+		// by the same seed-derived phase so the pattern stays evenly spaced.
+		spacing := int64(s.Period) / int64(s.Count)
+		phase := int64(0)
+		if max := spacing - dur; max > 0 {
+			phase = int64(jitterHash(s.Seed, n, 0) % uint64(max+1))
+		}
+		for k := 0; k < s.Count; k++ {
+			start := periodStart + int64(k)*spacing + phase
 			out = append(out, Window{time.Unix(0, start), time.Unix(0, start+dur)})
 		}
 	}

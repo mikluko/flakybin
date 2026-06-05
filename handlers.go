@@ -175,7 +175,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		"seed":     {"42"},
 		"uptime":   {defaultUptime},
 	}
-	sched, _ := parseSchedule(Jitter, v) // fixed inputs cannot fail
+	sched, _ := parseSchedule(Even, v) // fixed inputs cannot fail
 	req := request{sched: sched, now: time.Now()}
 	req.active, req.inOut = sched.ActiveWindow(req.now)
 	setHeaders(w, req)

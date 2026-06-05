@@ -193,12 +193,12 @@ func buildNav(s Schedule, uptime string) navView {
 
 	var nav navView
 
-	// mode. Skip the noise chip when the current period is not divisible by
-	// the duration: such a (jitter-only) shape cannot be a valid noise target
-	// and the link would only 400.
+	// mode. Skip the noise chip when the current period is not divisible by the
+	// duration: noise needs an even division into slots, so the link would 400.
+	// (even and jitter have no such constraint.)
 	modeRow := navRow{Label: "mode"}
-	for _, m := range []string{"jitter", "noise"} {
-		if m == "noise" && s.Mode == Jitter && s.Period%s.Duration != 0 {
+	for _, m := range []string{"even", "jitter", "noise"} {
+		if m == "noise" && s.Period%s.Duration != 0 {
 			continue
 		}
 		modeRow.Chips = append(modeRow.Chips, navChip{
@@ -468,7 +468,7 @@ func aligns(mode Mode, period, dur time.Duration, downFrac float64) bool {
 		}
 		capacity = int(period / dur)
 		count = int(math.Round(float64(capacity) * downFrac))
-	default: // Jitter
+	default: // Jitter, Even
 		capacity = int(period / dur)
 		count = int(math.Round(downFrac * float64(period) / float64(dur)))
 	}

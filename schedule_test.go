@@ -22,7 +22,7 @@ func mustParse(t *testing.T, mode Mode, q string) Schedule {
 // TestDeterministic verifies the same schedule yields identical windows
 // regardless of when it is evaluated, for a given absolute period.
 func TestDeterministic(t *testing.T) {
-	for _, mode := range []Mode{Noise, Jitter} {
+	for _, mode := range []Mode{Noise, Jitter, Even} {
 		s := mustParse(t, mode, "period=1h&duration=5m&count=3&seed=7")
 		n := int64(12345)
 		a := s.windowsForPeriod(n)
@@ -51,6 +51,35 @@ func TestNoiseAlignment(t *testing.T) {
 		}
 		if w.Start.UnixNano()%int64(5*time.Minute) != 0 {
 			t.Fatalf("window start %v not aligned to 5m grid", w.Start)
+		}
+	}
+}
+
+// TestEvenSpacing checks even mode spaces outages uniformly by period/count,
+// and that the seed shifts the phase without changing the spacing.
+func TestEvenSpacing(t *testing.T) {
+	s := mustParse(t, Even, "period=1h&duration=5m&count=4&seed=1")
+	w := s.windowsForPeriod(0)
+	if len(w) != 4 {
+		t.Fatalf("want 4 windows, got %d", len(w))
+	}
+	spacing := time.Hour / 4 // 15m
+	for i := 1; i < len(w); i++ {
+		if gap := w[i].Start.Sub(w[i-1].Start); gap != spacing {
+			t.Errorf("gap %d = %s, want %s", i, gap, spacing)
+		}
+		if d := w[i].End.Sub(w[i].Start); d != 5*time.Minute {
+			t.Errorf("window %d length %s != 5m", i, d)
+		}
+	}
+	// A different seed shifts the phase (first start) but keeps spacing.
+	w2 := mustParse(t, Even, "period=1h&duration=5m&count=4&seed=2").windowsForPeriod(0)
+	if w[0].Start.Equal(w2[0].Start) {
+		t.Log("note: seeds 1 and 2 produced the same phase")
+	}
+	for i := 1; i < len(w2); i++ {
+		if gap := w2[i].Start.Sub(w2[i-1].Start); gap != spacing {
+			t.Errorf("seed2 gap %d = %s, want %s", i, gap, spacing)
 		}
 	}
 }

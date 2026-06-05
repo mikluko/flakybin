@@ -24,12 +24,14 @@ func badRequest(format string, a ...any) *httpError {
 // parseMode resolves the {mode} path segment.
 func parseMode(s string) (Mode, *httpError) {
 	switch s {
-	case "noise":
-		return Noise, nil
+	case "even":
+		return Even, nil
 	case "jitter":
 		return Jitter, nil
+	case "noise":
+		return Noise, nil
 	default:
-		return 0, &httpError{http.StatusNotFound, fmt.Sprintf("unknown mode %q (want noise or jitter)", s)}
+		return 0, &httpError{http.StatusNotFound, fmt.Sprintf("unknown mode %q (want even, jitter or noise)", s)}
 	}
 }
 
@@ -133,7 +135,7 @@ func resolveCount(mode Mode, q url.Values, period, dur time.Duration, slots int)
 		switch mode {
 		case Noise:
 			count = int(math.Round(float64(slots) * downFrac))
-		case Jitter:
+		default: // Jitter, Even — outages of duration placed within the period
 			downtime := downFrac * float64(period)
 			count = int(math.Round(downtime / float64(dur)))
 		}

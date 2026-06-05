@@ -172,6 +172,7 @@ func TestDurationUptimeAligned(t *testing.T) {
 		{Jitter, "period=1h&duration=2m&uptime=95", "95"},
 		{Noise, "period=24h&duration=5m&uptime=99", "99"},
 		{Noise, "period=1h&duration=5m&uptime=80", "80"},
+		{Even, "period=24h&duration=5m&uptime=95", "95"},
 		// Count-heavy load whose realized uptime (8.33%) is carried verbatim as
 		// the target. Before the aligns() fix, the duration row offered chips
 		// (e.g. 5m) that clamped count to capacity-1, pushing realized far off.

@@ -25,6 +25,7 @@ func TestCrawlNoBrokenLinks(t *testing.T) {
 	seeds := []string{
 		"/",
 		"/docs",
+		"/even/inspect?period=24h&duration=5m&uptime=99",
 		"/jitter/inspect?period=24h&duration=5m&uptime=99",
 		"/noise/inspect?period=24h&duration=5m&uptime=99.9",
 		"/jitter/inspect?period=1h&duration=7m&uptime=90", // indivisible (jitter only)

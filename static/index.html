@@ -37,7 +37,8 @@ monitor at it and get a known-good failure pattern to test against.
 <p>The first path segment selects how outages are placed within each period:</p>
 <table>
   <tr><th>mode</th><th>behavior</th></tr>
-  <tr><td><span class="pill">jitter</span> <em>(default)</em></td><td><code>count</code> outages of length <code>duration</code> are dropped at seed-hashed offsets anywhere within the period. No divisibility constraint; looks like organic flapping.</td></tr>
+  <tr><td><span class="pill">even</span> <em>(default)</em></td><td><code>count</code> outages of length <code>duration</code> spaced uniformly across the period (one per <code>period/count</code> interval); the <code>seed</code> shifts the whole pattern's phase. No divisibility constraint; regular and predictable.</td></tr>
+  <tr><td><span class="pill">jitter</span></td><td><code>count</code> outages of length <code>duration</code> are dropped at seed-hashed offsets anywhere within the period. No divisibility constraint; looks like organic flapping.</td></tr>
   <tr><td><span class="pill">noise</span></td><td>The period is divided into <code>N = period/duration</code> fixed slots; <code>count</code> of them are outages. <code>period</code> must divide evenly by <code>duration</code> (otherwise 400). Grid-aligned and easy to reason about.</td></tr>
 </table>
 
@@ -52,11 +53,11 @@ monitor at it and get a known-good failure pattern to test against.
 
 <h2>Examples</h2>
 <pre>
-# Jitter (default): a 24h period with outages totalling ≈ 99% availability,
-# returning 503 with an automatic Retry-After during each outage.
-/jitter/status/503?period=24h&amp;duration=5m&amp;uptime=99&amp;retry-after=auto
+# Even (default): a 24h period with outages totalling ≈ 99% availability,
+# evenly spaced, returning 503 with an automatic Retry-After during each outage.
+/even/status/503?period=24h&amp;duration=5m&amp;uptime=99&amp;retry-after=auto
 
-# Ten 1-minute blips scattered through each hour, seed 42.
+# Ten 1-minute blips scattered through each hour, seed 42 (jitter).
 /jitter/hang?period=1h&amp;duration=1m&amp;count=10&amp;seed=42
 
 # Connection drops after 128 bytes, once per 30-minute period.
@@ -69,7 +70,7 @@ monitor at it and get a known-good failure pattern to test against.
 /noise/status/500?period=1h&amp;duration=10m&amp;count=1
 
 # Inspect the schedule without triggering it.
-/jitter/inspect?period=24h&amp;duration=5m&amp;uptime=99
+/even/inspect?period=24h&amp;duration=5m&amp;uptime=99
 </pre>
 
 <h2>Response headers</h2>
