@@ -40,7 +40,12 @@ const (
 // explore chips. The current target is always added on top of these.
 var uptimeLadder = []string{"50", "80", "90", "95", "99", "99.9"}
 
-var scheduleTmpl = template.Must(template.ParseFS(staticFS, "static/schedule.html"))
+// Hierarchical templates: a shared base layout (static/base.html) with two
+// content overlays. Each overlay is parsed together with the base into its own
+// template set, then rendered via ExecuteTemplate(w, "base", data).
+var scheduleTmpl = template.Must(template.ParseFS(staticFS, "static/base.html", "static/schedule.html"))
+
+var docsTmpl = template.Must(template.ParseFS(staticFS, "static/base.html", "static/docs.html"))
 
 // --- view model -------------------------------------------------------------
 
@@ -141,7 +146,7 @@ func renderScheduleHTML(w http.ResponseWriter, req request, reqUptime string, of
 		Version: version,
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	scheduleTmpl.Execute(w, page)
+	scheduleTmpl.ExecuteTemplate(w, "base", page)
 }
 
 func buildStatus(req request) statusView {

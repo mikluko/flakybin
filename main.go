@@ -16,7 +16,6 @@ import (
 var version = "dev"
 
 var (
-	indexHTML = mustReadAsset("static/index.html")
 	styleCSS  = mustReadAsset("static/style.css")
 	robotsTxt = mustReadAsset("static/robots.txt")
 )
@@ -104,7 +103,7 @@ func defaultAddr() string {
 // handleDocs serves the static reference documentation at /docs.
 func handleDocs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(indexHTML)
+	docsTmpl.ExecuteTemplate(w, "base", struct{ Version string }{version})
 }
 
 // handleStyle serves the shared stylesheet used by both the explorer and docs.

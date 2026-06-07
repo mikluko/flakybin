@@ -23,6 +23,7 @@ th { opacity: .7; font-weight: 600; }
 .pill { display: inline-block; padding: .05em .5em; border: 1px solid #8886; border-radius: 999px; font-size: .8em; }
 
 footer { margin-top: 2rem; opacity: .6; font-size: .9em; }
+.caption { opacity: .6; font-size: .9em; }
 .github-corner svg { fill: #ec4899; color: #fff; position: absolute; top: 0; right: 0; border: 0; width: 72px; height: 72px; }
 .github-corner:hover .octo-arm { animation: octocat-wave 560ms ease-in-out; }
 @keyframes octocat-wave { 0%, 100% { transform: rotate(0); } 20%, 60% { transform: rotate(-25deg); } 40%, 80% { transform: rotate(10deg); } }
