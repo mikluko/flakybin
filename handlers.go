@@ -229,29 +229,31 @@ func serveSchedule(w http.ResponseWriter, r *http.Request, req request, target s
 		return windowView{win.Start.UTC(), win.End.UTC(), win.End.Sub(win.Start).String()}
 	}
 	view := struct {
-		Version    string       `json:"version"`
-		Mode       string       `json:"mode"`
-		Period     string       `json:"period"`
-		Duration   string       `json:"duration"`
-		Seed       uint64       `json:"seed"`
-		Count      int          `json:"count"`
-		SlotsTotal int          `json:"slots_total,omitempty"`
-		UptimePct  float64      `json:"uptime_pct"`
-		Now        time.Time    `json:"now"`
-		InOutage   bool         `json:"in_outage"`
-		Current    *windowView  `json:"current_window"`
-		Upcoming   []windowView `json:"upcoming"`
+		Version      string       `json:"version"`
+		Mode         string       `json:"mode"`
+		Period       string       `json:"period"`
+		Duration     string       `json:"duration"`
+		Seed         uint64       `json:"seed"`
+		Count        int          `json:"count"`
+		SlotsTotal   int          `json:"slots_total,omitempty"`
+		UptimePct    float64      `json:"uptime_pct"`
+		Now          time.Time    `json:"now"`
+		InOutage     bool         `json:"in_outage"`
+		Current      *windowView  `json:"current_window"`
+		Upcoming     []windowView `json:"upcoming"`
+		FailureLinks failureLinks `json:"failure_links"`
 	}{
-		Version:    version,
-		Mode:       req.sched.Mode.String(),
-		Period:     req.sched.Period.String(),
-		Duration:   req.sched.Duration.String(),
-		Seed:       req.sched.Seed,
-		Count:      req.sched.Count,
-		SlotsTotal: req.sched.Slots(),
-		UptimePct:  req.sched.UptimePct(),
-		Now:        req.now.UTC(),
-		InOutage:   req.inOut,
+		Version:      version,
+		Mode:         req.sched.Mode.String(),
+		Period:       req.sched.Period.String(),
+		Duration:     req.sched.Duration.String(),
+		Seed:         req.sched.Seed,
+		Count:        req.sched.Count,
+		SlotsTotal:   req.sched.Slots(),
+		UptimePct:    req.sched.UptimePct(),
+		Now:          req.now.UTC(),
+		InOutage:     req.inOut,
+		FailureLinks: buildFailureLinks(req.sched),
 	}
 	if req.inOut {
 		cw := mkWin(req.active)

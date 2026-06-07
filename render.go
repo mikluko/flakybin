@@ -309,6 +309,37 @@ func buildNav(s Schedule, uptime string) navView {
 // (e.g. retry-after for codes that carry it).
 type statusCode struct{ code, extra string }
 
+// failureLinks holds ready-to-call URLs for every failure of a schedule,
+// mirroring the HTML emulate nav. Exposed in the inspect JSON view.
+type failureLinks struct {
+	Status map[string]string `json:"status"`
+	Hang   string            `json:"hang"`
+	Drop   string            `json:"drop"`
+}
+
+// buildFailureLinks builds the failure URLs for s, using the same
+// count-based query as the HTML emulate chips (period, duration, seed, count).
+func buildFailureLinks(s Schedule) failureLinks {
+	base := "period=" + prettyDur(s.Period) +
+		"&duration=" + prettyDur(s.Duration) +
+		"&seed=" + strconv.FormatUint(s.Seed, 10) +
+		"&count=" + strconv.Itoa(s.Count)
+	url := func(path, extra string) string {
+		u := "/" + s.Mode.String() + "/" + path + "?" + base
+		if extra != "" {
+			u += "&" + extra
+		}
+		return u
+	}
+	fl := failureLinks{Status: make(map[string]string)}
+	for _, c := range append(append([]statusCode{}, status4xx...), status5xx...) {
+		fl.Status[c.code] = url("status/"+c.code, c.extra)
+	}
+	fl.Hang = url("hang", "")
+	fl.Drop = url("drop", "after=128")
+	return fl
+}
+
 var (
 	status4xx = []statusCode{
 		{"400", ""}, {"401", ""}, {"403", ""}, {"404", ""},

@@ -57,7 +57,7 @@ The first path segment selects how outages are placed within each period.
 | `GET /{mode}/status/{code}` | responds with HTTP `{code}`; 200 when up. Optional `retry-after=auto` or `retry-after=<seconds>` sets `Retry-After`. |
 | `GET /{mode}/hang` | withholds the response until the outage ends, or for `for=<duration>`. Emulates a timeout. |
 | `GET /{mode}/drop` | writes `after=<bytes>` of body (default 0) then resets the TCP connection. |
-| `GET /{mode}/inspect` | shows the schedule and its outage windows. Browsers get a graphical timeline, scripts get JSON (override with `?format=html`/`?format=json`). Triggers no failure. |
+| `GET /{mode}/inspect` | shows the schedule and its outage windows. Browsers get a graphical timeline, scripts get JSON (override with `?format=html`/`?format=json`). The JSON includes a `failure_links` block with ready-to-call URLs for every status code plus hang and drop. Triggers no failure. |
 
 ## Examples
 
