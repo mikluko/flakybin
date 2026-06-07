@@ -2,6 +2,10 @@
 {{define "title"}}flakybin schedule — {{.Title}}{{end}}
 {{define "content"}}
 <h1><a href="/">flakybin</a><span class="subnav"> · <a href="/docs">docs</a> · <a href="/diceroll" title="random schedule">🎲</a></span></h1>
+<details class="intro" id="intro" open>
+  <summary>Deterministic HTTP chaos for testing uptime monitors and retry logic.</summary>
+  <p>Real outages are rare and never on cue, so monitors and retry logic are hard to test against the real thing. flakybin fails on a deterministic, seed-reproducible schedule: point a monitor at it and get a known-good failure pattern, identical across restarts and machines. Tune a schedule below, then copy a failure URL. <a href="/docs">Full docs →</a></p>
+</details>
 <p class="sub">
   <span class="badge {{if .Status.InOutage}}down{{else}}up{{end}}">{{.Status.Label}}</span>
   <span class="util">{{printf "%.3g" .Status.UptimePct}}% uptime</span>
@@ -43,6 +47,17 @@
 <p class="caption">Each track is one period (next {{.PeriodsShown}} shown). View as <a href="{{.JSONHref}}"><code>JSON</code></a> for machine-readable output.</p>
 {{end}}
 {{define "scripts"}}
+<script>
+// Remember whether the intro block is collapsed, per browser.
+(function () {
+  var d = document.getElementById('intro');
+  if (!d) return;
+  try { if (localStorage.getItem('flakybin:intro') === 'closed') d.open = false; } catch (_) {}
+  d.addEventListener('toggle', function () {
+    try { localStorage.setItem('flakybin:intro', d.open ? 'open' : 'closed'); } catch (_) {}
+  });
+})();
+</script>
 <div id="tip"></div>
 <script>
 (function () {
