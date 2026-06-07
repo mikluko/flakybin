@@ -104,10 +104,11 @@ func (s Schedule) windowsForPeriod(n int64) []Window {
 	case Even:
 		// One outage per equal interval (spacing = period/Count), all shifted
 		// by the same seed-derived phase so the pattern stays evenly spaced.
+		// Phase is period-independent so spacing holds across period boundaries.
 		spacing := int64(s.Period) / int64(s.Count)
 		phase := int64(0)
 		if max := spacing - dur; max > 0 {
-			phase = int64(jitterHash(s.Seed, n, 0) % uint64(max+1))
+			phase = int64(jitterHash(s.Seed, 0, 0) % uint64(max+1))
 		}
 		for k := 0; k < s.Count; k++ {
 			start := periodStart + int64(k)*spacing + phase

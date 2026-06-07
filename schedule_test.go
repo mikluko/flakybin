@@ -84,6 +84,22 @@ func TestEvenSpacing(t *testing.T) {
 	}
 }
 
+// TestEvenSpacingAcrossPeriods checks even spacing holds across the period
+// boundary: the gap from the last outage of one period to the first of the
+// next must equal the in-period spacing (phase is period-independent).
+func TestEvenSpacingAcrossPeriods(t *testing.T) {
+	s := mustParse(t, Even, "period=1h&duration=5m&count=4&seed=1")
+	spacing := time.Hour / 4 // 15m
+	prev := s.windowsForPeriod(0)
+	for n := int64(1); n <= 3; n++ {
+		cur := s.windowsForPeriod(n)
+		if gap := cur[0].Start.Sub(prev[len(prev)-1].Start); gap != spacing {
+			t.Errorf("boundary gap period %d->%d = %s, want %s", n-1, n, gap, spacing)
+		}
+		prev = cur
+	}
+}
+
 // TestSeedChangesPlacement ensures a different seed reshuffles outages.
 func TestSeedChangesPlacement(t *testing.T) {
 	a := mustParse(t, Noise, "period=1h&duration=5m&count=3&seed=1").windowsForPeriod(0)
